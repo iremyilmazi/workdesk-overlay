@@ -1,0 +1,9 @@
+{
+  "jobs": [
+    {
+      "name": "Örnek iş",
+      "status": "OK",
+      "details": "Buraya gerçek iş durumlarınızı ekleyin."
+    }
+  ]
+}

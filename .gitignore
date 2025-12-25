@@ -1,0 +1,11 @@
+Thumbs.db
+.DS_Store
+*.log
+*.tmp
+*.bak
+
+# Local data files (not pushed to GitHub)
+notes.json
+todos.json
+cc-errors.log
+
