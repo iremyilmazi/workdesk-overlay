@@ -211,7 +211,7 @@ function Save-NotesText([string]$t){}
 $xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="1120" Height="700"
+  Width="1120" Height="700" 
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -465,20 +465,23 @@ $xaml = @"
 
   </Window.Resources>
 
-  <Grid Margin="14">
-    <Border CornerRadius="22" Background="#151B22" BorderBrush="#223041" BorderThickness="1">
-      <Grid Margin="22">
+  <Grid>
+    <!-- translucent full-window backdrop -->
+    <Border Background="#151B22" Opacity="0.68"/>
+
+    <!-- content layer -->
+    <Grid Margin="24">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="18"/>
-          <RowDefinition Height="*"/>
+          <RowDefinition Height="*"/> 
         </Grid.RowDefinitions>
 
         <!-- Header -->
         <Grid Grid.Row="0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/> 
           </Grid.ColumnDefinitions>
 
           <StackPanel>
@@ -489,7 +492,7 @@ $xaml = @"
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
             <Border CornerRadius="18" Background="#1E2A38" BorderBrush="#2B3A4E" BorderThickness="1" Padding="12,8" Margin="0,0,10,0">
               <StackPanel Orientation="Horizontal">
-                <TextBlock Text="⌨" FontSize="14" Foreground="#CFE0F7" Margin="0,0,8,0"/>
+                <TextBlock Text="⌨" FontSize="14" Foreground="#CFE0F7" Margin="0,0,8,0"/> 
                 <TextBlock Text="Ctrl+Alt+D" FontSize="14" Foreground="#CFE0F7"/>
               </StackPanel>
             </Border>
@@ -500,332 +503,333 @@ $xaml = @"
         </Grid>
 
         <!-- Body -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Margin="0,10,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="340"/>
-            <ColumnDefinition Width="22"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="22"/>
-            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="*" MinWidth="280"/>
+            <ColumnDefinition Width="24"/>
+            <ColumnDefinition Width="*" MinWidth="280"/>
+            <ColumnDefinition Width="24"/>
+            <ColumnDefinition Width="*" MinWidth="320"/>
           </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
 
-          <!-- LEFT: Calendar + Quick Notes -->
-          <StackPanel Grid.Column="0">
-            <!-- Calendar card (reference look) -->
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" Margin="0,0,0,16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="14"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="10"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+          <!-- Calendar -->
+          <Border Grid.Row="0" Grid.Column="0" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="280" MaxWidth="420" HorizontalAlignment="Left">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="14"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
 
-                <!-- Header row -->
-                <Grid Grid.Row="0">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="40"/>
-                  </Grid.ColumnDefinitions>
-                  <Button x:Name="PrevMonthBtn" Style="{StaticResource IconBtn}" Content="‹"/>
-                  <TextBlock x:Name="CalTitle" Grid.Column="1" Text="Month YYYY" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"
-                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                  <Button x:Name="NextMonthBtn" Grid.Column="2" Style="{StaticResource IconBtn}" Content="›"/>
-                </Grid>
-
-                <!-- Day names -->
-                <UniformGrid Grid.Row="2" Columns="7">
-                  <TextBlock Text="S" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="M" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="T" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="W" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="T" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="F" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                  <TextBlock Text="S" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                </UniformGrid>
-
-                <!-- Days grid -->
-                <UniformGrid Grid.Row="4" x:Name="DaysGrid" Columns="7" Rows="6" />
+              <!-- Header row -->
+              <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="40"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="40"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="PrevMonthBtn" Style="{StaticResource IconBtn}" Content="‹"/>
+                <TextBlock x:Name="CalTitle" Grid.Column="1" Text="Month YYYY" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Button x:Name="NextMonthBtn" Grid.Column="2" Style="{StaticResource IconBtn}" Content="›"/>
               </Grid>
-            </Border>
 
-            <!-- Quick Notes card -->
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="12"/>
-                  <RowDefinition Height="*"/>
-                  <RowDefinition Height="8"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+              <!-- Day names -->
+              <UniformGrid Grid.Row="2" Columns="7">
+                <TextBlock Text="S" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="M" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="T" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="W" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="T" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="F" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="S" Foreground="#6F839A" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+              </UniformGrid>
 
-                <Grid Grid.Row="0">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                  </Grid.ColumnDefinitions>
-                  <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="🗒" FontSize="14" Foreground="#F2B84B" Margin="0,0,10,0"/>
-                    <TextBlock Text="Quick Notes" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="NewNoteBtn" Style="{StaticResource IconBtn}" Content="＋" Width="28" Height="28" Margin="0,0,4,0" ToolTip="Yeni not (bugün)"/>
-                    <Button x:Name="NewNoteForSelectedBtn" Style="{StaticResource IconBtn}" Content="📅" Width="28" Height="28" Margin="0,0,4,0" ToolTip="Yeni notu seçili güne kaydet" Visibility="Collapsed"/>
-                    <Button x:Name="DeleteNoteBtn" Style="{StaticResource IconBtn}" Content="🗑" Width="28" Height="28"/>
-                  </StackPanel>
-                </Grid>
+              <!-- Days grid -->
+              <UniformGrid Grid.Row="4" x:Name="DaysGrid" Columns="7" Rows="6" />
+            </Grid>
+          </Border>
 
-                <Grid Grid.Row="2">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                  </Grid.ColumnDefinitions>
+          <!-- Tasks -->
+          <Border Grid.Row="0" Grid.Column="2" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="300" MaxWidth="460" HorizontalAlignment="Center">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
 
-                  <Border Grid.Column="0" Background="#151B22" BorderBrush="#223041" BorderThickness="1" CornerRadius="10">
-                    <ListBox x:Name="NotesList"
-                             Style="{StaticResource NotesListStyle}">
-                    </ListBox>
-                  </Border>
-
-                  <TextBox x:Name="NotesBox" Grid.Column="2" Style="{StaticResource NotesBoxStyle}"/>
-                </Grid>
-
-                <TextBlock Grid.Row="4" x:Name="NoteMetaText" Text="AUTO-SAVED" Foreground="#6F839A" FontSize="11" HorizontalAlignment="Right"/>
+              <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="☑" FontSize="14" Foreground="#F2B84B" Margin="0,0,8,0"/>
+                  <TextBlock x:Name="TodoTitleText" Text="TODAY'S TASKS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
+                </StackPanel>
+                <Button x:Name="TodoAddBtn" Grid.Column="1" Style="{StaticResource IconBtn}" Content="＋" Width="28" Height="28"/>
               </Grid>
-            </Border>
-          </StackPanel>
 
-          <!-- CENTER: Pomodoro + System Status + Tasks -->
-          <StackPanel Grid.Column="2">
-            <!-- Pomodoro -->
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" Margin="0,0,0,16">
+              <Border Grid.Row="2" x:Name="TodoInputContainer"
+                      Background="#151B22" BorderBrush="#223041" BorderThickness="1"
+                      CornerRadius="8" Padding="6,3" Visibility="Collapsed">
+                <TextBox x:Name="TodoInput"
+                         Background="Transparent" BorderThickness="0"
+                         Foreground="#CFE0F7" FontSize="13"
+                         CaretBrush="#CFE0F7"
+                         VerticalContentAlignment="Center"
+                         ToolTip="Yeni görev yazıp Enter'a basın"/>
+              </Border>
+
+              <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="TodoList" />
+              </ScrollViewer>
+            </Grid>
+          </Border>
+
+          <!-- Unread Mails -->
+          <Border Grid.Row="0" Grid.Column="4" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="320" MaxWidth="520" HorizontalAlignment="Right">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+
               <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="10"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="12"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="14"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="UNREAD MAILS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
+                <Button x:Name="RefreshMailBtn" Grid.Column="1" Content="↻" Style="{StaticResource IconBtn}" Margin="8,0,0,0"/>
+              </Grid>
 
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                  </Grid.ColumnDefinitions>
-                  <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⏱" FontSize="14" Foreground="#F2B84B" Margin="0,0,8,0"/>
-                    <TextBlock Text="Focus / Pomodoro" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
-                  </StackPanel>
-                  <Border Grid.Column="1" Padding="8,2" Background="#131820" CornerRadius="10" VerticalAlignment="Center">
-                    <TextBlock x:Name="PomodoroMode" Text="IDLE" Foreground="#BFE3FF" FontSize="12" FontWeight="SemiBold"/>
-                  </Border>
-                </Grid>
+              <StackPanel Grid.Row="2" x:Name="MailList" />
+            </Grid>
+          </Border>
 
-                <TextBlock Grid.Row="2" x:Name="PomodoroTime" Text="25:00" FontSize="36" FontWeight="SemiBold" Foreground="#EAF2FF"/>
+          <!-- Pomodoro -->
+          <Border Grid.Row="2" Grid.Column="0" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="280" MaxWidth="420" HorizontalAlignment="Left">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="14"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="4" Text="Stay focused in short sprints" Foreground="#8FA3BC" FontSize="12"/>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="⏱" FontSize="14" Foreground="#F2B84B" Margin="0,0,8,0"/>
+                  <TextBlock Text="Focus / Pomodoro" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
+                </StackPanel>
+                <Border Grid.Column="1" Padding="8,2" Background="#131820" CornerRadius="10" VerticalAlignment="Center">
+                  <TextBlock x:Name="PomodoroMode" Text="IDLE" Foreground="#BFE3FF" FontSize="12" FontWeight="SemiBold"/>
+                </Border>
+              </Grid>
 
-                <ProgressBar Grid.Row="5" x:Name="PomodoroBar" Height="6" Minimum="0" Maximum="1" Value="0"
-                             Margin="0,10,0,0"
-                             Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
+              <TextBlock Grid.Row="2" x:Name="PomodoroTime" Text="25:00" FontSize="36" FontWeight="SemiBold" Foreground="#EAF2FF"/>
 
-                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                  <Button x:Name="FocusBtn" Content="Start Focus" Style="{StaticResource PrimaryActionBtn}"/>
-                  <Button x:Name="BreakBtn" Content="Break" Style="{StaticResource SecondaryActionBtn}"/>
-                  <Button x:Name="ResetBtn" Content="Reset" Style="{StaticResource SecondaryActionBtn}" Margin="0,0,0,0"/>
+              <TextBlock Grid.Row="4" Text="Stay focused in short sprints" Foreground="#8FA3BC" FontSize="12"/>
+
+              <ProgressBar Grid.Row="5" x:Name="PomodoroBar" Height="6" Minimum="0" Maximum="1" Value="0"
+                           Margin="0,10,0,0"
+                           Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
+
+              <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="FocusBtn" Content="Start Focus" Style="{StaticResource PrimaryActionBtn}"/>
+                <Button x:Name="BreakBtn" Content="Break" Style="{StaticResource SecondaryActionBtn}"/>
+                <Button x:Name="ResetBtn" Content="Reset" Style="{StaticResource SecondaryActionBtn}" Margin="0,0,0,0"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- System Status -->
+          <Border Grid.Row="4" Grid.Column="0" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="280" MaxWidth="420" HorizontalAlignment="Left">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+
+              <TextBlock Text="SYSTEM STATUS" Foreground="#8FA3BC" FontSize="12" FontWeight="SemiBold"/>
+
+              <!-- CPU -->
+              <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <TextBlock Text="CPU" Foreground="#CFE0F7" FontSize="12"/>
+                <TextBlock x:Name="SysCpuText" Text="-" Foreground="#CFE0F7" FontSize="12" HorizontalAlignment="Right" Margin="8,0,0,0"/>
+              </StackPanel>
+              <ProgressBar Grid.Row="3" x:Name="SysCpuBar" Height="6" Minimum="0" Maximum="100" Value="0"
+                           Margin="0,4,0,0" Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
+
+              <!-- RAM -->
+              <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <TextBlock Text="RAM" Foreground="#CFE0F7" FontSize="12"/>
+                <TextBlock x:Name="SysMemText" Text="-" Foreground="#CFE0F7" FontSize="12" HorizontalAlignment="Right" Margin="8,0,0,0"/>
+              </StackPanel>
+              <ProgressBar Grid.Row="6" x:Name="SysMemBar" Height="6" Minimum="0" Maximum="100" Value="0"
+                           Margin="0,4,0,0" Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
+
+              <!-- Meta: battery + network -->
+              <TextBlock Grid.Row="8" x:Name="SysMetaText" Text="Battery: -   •   Network: -"
+                         Foreground="#8FA3BC" FontSize="11" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+          </Border>
+
+          <!-- Quick Notes -->
+          <Border Grid.Row="2" Grid.Column="4" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="320" MaxWidth="520" HorizontalAlignment="Right">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+
+              <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="🗒" FontSize="14" Foreground="#F2B84B" Margin="0,0,10,0"/>
+                  <TextBlock Text="Quick Notes" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                  <Button x:Name="NewNoteBtn" Style="{StaticResource IconBtn}" Content="＋" Width="28" Height="28" Margin="0,0,4,0" ToolTip="Yeni not (bugün)"/>
+                  <Button x:Name="NewNoteForSelectedBtn" Style="{StaticResource IconBtn}" Content="📅" Width="28" Height="28" Margin="0,0,4,0" ToolTip="Yeni notu seçili güne kaydet" Visibility="Collapsed"/>
+                  <Button x:Name="DeleteNoteBtn" Style="{StaticResource IconBtn}" Content="🗑" Width="28" Height="28"/>
                 </StackPanel>
               </Grid>
-            </Border>
 
-            <!-- System Status -->
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" Margin="0,0,0,16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="10"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="8"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="8"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+              <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="160"/>
+                  <ColumnDefinition Width="12"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <TextBlock Text="SYSTEM STATUS" Foreground="#8FA3BC" FontSize="12" FontWeight="SemiBold"/>
+                <Border Grid.Column="0" Background="#151B22" BorderBrush="#223041" BorderThickness="1" CornerRadius="10">
+                  <ListBox x:Name="NotesList"
+                           Style="{StaticResource NotesListStyle}">
+                  </ListBox>
+                </Border>
 
-                <!-- CPU -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                  <TextBlock Text="CPU" Foreground="#CFE0F7" FontSize="12"/>
-                  <TextBlock x:Name="SysCpuText" Text="-" Foreground="#CFE0F7" FontSize="12" HorizontalAlignment="Right" Margin="8,0,0,0"/>
-                </StackPanel>
-                <ProgressBar Grid.Row="3" x:Name="SysCpuBar" Height="6" Minimum="0" Maximum="100" Value="0"
-                             Margin="0,4,0,0" Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
-
-                <!-- RAM -->
-                <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                  <TextBlock Text="RAM" Foreground="#CFE0F7" FontSize="12"/>
-                  <TextBlock x:Name="SysMemText" Text="-" Foreground="#CFE0F7" FontSize="12" HorizontalAlignment="Right" Margin="8,0,0,0"/>
-                </StackPanel>
-                <ProgressBar Grid.Row="6" x:Name="SysMemBar" Height="6" Minimum="0" Maximum="100" Value="0"
-                             Margin="0,4,0,0" Background="#131820" Foreground="#4BA3FF" BorderThickness="0"/>
-
-                <!-- Meta: battery + network -->
-                <TextBlock Grid.Row="8" x:Name="SysMetaText" Text="Battery: -   •   Network: -"
-                           Foreground="#8FA3BC" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                <TextBox x:Name="NotesBox" Grid.Column="2" Style="{StaticResource NotesBoxStyle}"/>
               </Grid>
-            </Border>
 
-            <!-- Mini To-Do / Tasks -->
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="10"/>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="8"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+              <TextBlock Grid.Row="4" x:Name="NoteMetaText" Text="AUTO-SAVED" Foreground="#6F839A" FontSize="11" HorizontalAlignment="Right"/>
+            </Grid>
+          </Border>
 
-                <Grid Grid.Row="0">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                  </Grid.ColumnDefinitions>
-                  <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="☑" FontSize="14" Foreground="#F2B84B" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TodoTitleText" Text="TODAY'S TASKS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
-                  </StackPanel>
-                  <Button x:Name="TodoAddBtn" Grid.Column="1" Style="{StaticResource IconBtn}" Content="＋" Width="28" Height="28"/>
-                </Grid>
+          <!-- Quick Launch -->
+          <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" MinWidth="440" MaxWidth="640" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,16,0,0">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="18"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
 
-                    <Border Grid.Row="2" x:Name="TodoInputContainer"
-                    Background="#151B22" BorderBrush="#223041" BorderThickness="1"
-                    CornerRadius="8" Padding="6,3" Visibility="Collapsed">
-                  <TextBox x:Name="TodoInput"
-                           Background="Transparent" BorderThickness="0"
-                           Foreground="#CFE0F7" FontSize="13"
-                           CaretBrush="#CFE0F7"
-                           VerticalContentAlignment="Center"
-                           ToolTip="Yeni görev yazıp Enter'a basın"/>
+              <TextBlock Text="QUICK LAUNCH" Foreground="#8FA3BC" FontSize="12" FontWeight="SemiBold"/>
+
+              <!-- 6 küçük ikon tek satır, ortalanmış -->
+              <UniformGrid Grid.Row="2" Columns="6" Margin="0,4,0,0" HorizontalAlignment="Center">
+                <!-- Outlook -->
+                <Button x:Name="QlOutlook" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#2F4B78" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="📧" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </Border>
+                    <TextBlock Text="Outlook" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
 
-                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                  <StackPanel x:Name="TodoList" />
-                </ScrollViewer>
-              </Grid>
-            </Border>
-          </StackPanel>
+                <!-- Teams -->
+                <Button x:Name="QlTeams" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#51338E" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="👥" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Teams" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
 
-          <!-- RIGHT: Unread Mails -->
-          <StackPanel Grid.Column="4">
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16" Margin="0,0,0,16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="12"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <!-- File Explorer -->
+                <Button x:Name="QlExplorer" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#6C4720" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="📁" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Explorer" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
 
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                  </Grid.ColumnDefinitions>
-                  <TextBlock Text="UNREAD MAILS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
-                  <Button x:Name="RefreshMailBtn" Grid.Column="1" Content="↻" Style="{StaticResource IconBtn}" Margin="8,0,0,0"/>
-                </Grid>
+                <!-- Edge -->
+                <Button x:Name="QlEdge" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#14686F" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Edge" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
 
-                <StackPanel Grid.Row="2" x:Name="MailList" />
-              </Grid>
-            </Border>
+                <!-- VS Code -->
+                <Button x:Name="QlVSCode" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#0B6FA4" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="&lt;/&gt;" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="VS Code" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
 
-            <Border CornerRadius="18" Background="#1A2028" BorderBrush="#223041" BorderThickness="1" Padding="16">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="18"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Text="QUICK LAUNCH" Foreground="#8FA3BC" FontSize="12" FontWeight="SemiBold"/>
-
-                <!-- 6 küçük ikon tek satır, ortalanmış -->
-                <UniformGrid Grid.Row="2" Columns="6" Margin="0,4,0,0" HorizontalAlignment="Center">
-                  <!-- Outlook -->
-                  <Button x:Name="QlOutlook" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#2F4B78" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="📧" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="Outlook" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-
-                  <!-- Teams -->
-                  <Button x:Name="QlTeams" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#51338E" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="👥" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="Teams" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-
-                  <!-- File Explorer -->
-                  <Button x:Name="QlExplorer" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#6C4720" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="📁" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="Explorer" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-
-                  <!-- Edge -->
-                  <Button x:Name="QlEdge" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#14686F" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="Edge" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-
-                  <!-- VS Code -->
-                  <Button x:Name="QlVSCode" Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#0B6FA4" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="&lt;/&gt;" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="VS Code" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-
-                  <!-- Excel -->
-                  <Button x:Name="QlExcel" Margin="0,0,0,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
-                    <StackPanel>
-                      <Border CornerRadius="12" Background="#17653E" Width="40" Height="40" HorizontalAlignment="Center">
-                        <TextBlock Text="X" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      </Border>
-                      <TextBlock Text="Excel" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                  </Button>
-                </UniformGrid>
-              </Grid>
-            </Border>
-          </StackPanel>
+                <!-- Excel -->
+                <Button x:Name="QlExcel" Margin="0,0,0,0" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                  <StackPanel>
+                    <Border CornerRadius="12" Background="#17653E" Width="40" Height="40" HorizontalAlignment="Center">
+                      <TextBlock Text="X" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Excel" Foreground="#CFE0F7" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+              </UniformGrid>
+            </Grid>
+          </Border>
 
         </Grid>
       </Grid>
-    </Border>
   </Grid>
 </Window>
 "@
@@ -1863,10 +1867,12 @@ try {
   if($GreetText){ $GreetText.Text = ("{0}, İrem" -f (Get-TimeOfDayGreeting $now)) }
 } catch {}
 
-# start hidden (centered)
+# start hidden (full-screen work area)
 $wa = [System.Windows.SystemParameters]::WorkArea
-$win.Left = $wa.Left + (($wa.Width - $win.Width) / 2)
-$win.Top  = $wa.Top  + (($wa.Height - $win.Height) / 2)
+$win.Left = $wa.Left
+$win.Top  = $wa.Top
+$win.Width = $wa.Width
+$win.Height = $wa.Height
 $win.Hide()
 $global:DashboardWin = $win
 
