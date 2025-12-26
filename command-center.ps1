@@ -845,6 +845,7 @@ $QlExcel    = $win.FindName("QlExcel")
 $global:Notes = @(Load-NotesData)
 $global:CurrentNote = $null
 $global:NotesUpdatingFromCode = $false
+$global:NoteRelocateNoteId = $null  # takvimden "ait olduğu tarihi" güncellemek için geçici id
 
 # ---------------- Tasks model & helpers ----------------
 $global:Todos = @()
@@ -987,13 +988,49 @@ function Get-NextNoteId {
   return ( ($global:Notes | Measure-Object -Property id -Maximum).Maximum + 1 )
 }
 
+function Convert-ToLocalDateOnly([object]$value){
+  if($null -eq $value){ return $null }
+
+  # Zaten DateTime ise doğrudan yerel tarihe indir
+  if($value -is [datetime]){
+    if($value.Kind -eq [System.DateTimeKind]::Utc){
+      return ($value).ToLocalTime().Date
+    }
+    return ($value).Date
+  }
+
+  $s = [string]$value
+
+  # JSON /Date(XXXXXXXXXXXX)/ formatını yakala (ms since Unix epoch)
+  if($s -match "\\/Date\\((\d+)\\)\\/"){
+    try {
+      $ms = [int64]$matches[1]
+      $dto = [System.DateTimeOffset]::FromUnixTimeMilliseconds($ms)
+      # Değeri senin yerel zaman dilimine (GMT+03:00) çevirip
+      # sadece tarih kısmını alıyoruz; böylece JSON'da saklanan
+      # tarih hangi makinede okunursa okunsun, takvimde yerel gün
+      # olarak doğru hücreye oturuyor.
+      return $dto.ToLocalTime().Date
+    } catch {
+      # devam et, aşağıdaki genel parse'a düşsün
+    }
+  }
+
+  # ISO veya diğer tanınan formatlar için genel dönüşüm
+  try {
+    return ([datetime]$value).Date
+  } catch {
+    return $null
+  }
+}
+
 function Get-NoteDate($note){
   if($null -eq $note){ return $null }
   if($note.PSObject.Properties["date"]){
-    try { return ([datetime]$note.date).Date } catch { return $null }
+    return (Convert-ToLocalDateOnly $note.date)
   }
   if($note.PSObject.Properties["createdAt"]){
-    try { return ([datetime]$note.createdAt).Date } catch { return $null }
+    return (Convert-ToLocalDateOnly $note.createdAt)
   }
   return $null
 }
@@ -1032,16 +1069,9 @@ function Update-NotesAreaVisibility {
   }
 
   if($NewNoteForSelectedBtn){
-    $show = $false
-    if($global:CurrentNote){
-      $text = [string]$global:CurrentNote.text
-      $noteDay = Get-NoteDate $global:CurrentNote
-      $currentDay = $global:CalSelected.Date
-      if([string]::IsNullOrWhiteSpace($text) -and $noteDay -ne $null -and $noteDay -eq $currentDay){
-        $show = $true
-      }
-    }
-    $NewNoteForSelectedBtn.Visibility = if($show){ [System.Windows.Visibility]::Visible } else { [System.Windows.Visibility]::Collapsed }
+    # Yeni davranış: mevcutta bir not seçiliyse takvim butonu görünsün,
+    # ilk gün seçimi bu notun "ait olduğu tarih" alanını güncelleyecek.
+    $NewNoteForSelectedBtn.Visibility = if($global:CurrentNote){ [System.Windows.Visibility]::Visible } else { [System.Windows.Visibility]::Collapsed }
   }
 }
 
@@ -1176,20 +1206,16 @@ $NewNoteBtn.Add_Click({
 
 if($NewNoteForSelectedBtn){
   $NewNoteForSelectedBtn.Add_Click({
+    # Mevcut seçili notun "ait olduğu tarih" alanını değiştirmek için
+    # bir sonraki takvim günü tıklamasını yakala.
+    if($null -eq $global:CurrentNote){ return }
     $saveTimer.Stop()
     Save-CurrentNote
 
-    $target = $global:CalSelected
-    if($null -eq $target){ $target = (Get-Date).Date }
-
-    $note = New-NoteForDate $target
-    $global:Notes = @($global:Notes) + @($note)
-    Save-NotesData $global:Notes
-
-    $global:CalDisplay = Get-Date -Year $target.Year -Month $target.Month -Day 1
-    Render-Calendar
-    Update-NotesListUI
-    Set-CurrentNote $note
+    $global:NoteRelocateNoteId = $global:CurrentNote.id
+    if($NoteMetaText){
+      $NoteMetaText.Text = "Takvimden yeni bir gün seçin (ait olduğu tarih güncellenecek)."
+    }
   })
 }
 
@@ -1432,11 +1458,48 @@ function Ensure-CalendarButtons {
     $btn.Tag = $null
     $btn.Add_Click({
       $d = $this.Tag
-      if($d -ne $null){
-        $saveTimer.Stop()
-        Save-CurrentNote
+      if($d -eq $null){ return }
 
-        $global:CalSelected = ([datetime]$d).Date
+      $saveTimer.Stop()
+      Save-CurrentNote
+
+      # Eğer bir not için "ait olduğu tarih" değiştirme modu aktifse,
+      # ilk gün seçimi o notun date alanını günceller.
+      if($global:NoteRelocateNoteId -ne $null){
+        $note = $global:Notes | Where-Object { $_.id -eq $global:NoteRelocateNoteId } | Select-Object -First 1
+        $global:NoteRelocateNoteId = $null
+
+        if($note){
+          $newDate = ([datetime]$d).Date
+          $note.date = $newDate
+          $note.updatedAt = Get-Date
+          Save-NotesData $global:Notes
+
+          $global:CalSelected = $newDate
+          $global:CalDisplay  = Get-Date -Year $newDate.Year -Month $newDate.Month -Day 1
+          Render-Calendar
+          Update-NotesListUI
+          Set-CurrentNote $note
+        } else {
+          # Not bulunamazsa, normal davranışa geri dön
+          $sel = ([datetime]$d).Date
+          $global:CalSelected = $sel
+          $global:CalDisplay  = Get-Date -Year $sel.Year -Month $sel.Month -Day 1
+          Render-Calendar
+          Update-NotesListUI
+
+          $dayNotes = Get-NotesForCurrentDay | Sort-Object createdAt -Descending
+          if($dayNotes.Count -gt 0){
+            Set-CurrentNote ($dayNotes | Select-Object -First 1)
+          } else {
+            Set-CurrentNote $null
+          }
+        }
+      } else {
+        # Normal tıklama: seçili günü değiştir, o güne ait en son notu aç
+        $sel = ([datetime]$d).Date
+        $global:CalSelected = $sel
+        $global:CalDisplay  = Get-Date -Year $sel.Year -Month $sel.Month -Day 1
         Render-Calendar
         Update-NotesListUI
 
@@ -1480,10 +1543,10 @@ function Render-Calendar {
     }
     $btn.Background = "Transparent"
 
-    if($d -eq $today){
+    if($d.Date -eq $today){
       $btn.Background = "#162536"
     }
-    if($d -eq $global:CalSelected){
+    if($d.Date -eq $global:CalSelected.Date){
       $btn.Background = "#2382E8"
       $btn.Foreground = "White"
     }
