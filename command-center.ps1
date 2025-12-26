@@ -65,6 +65,49 @@ function Format-Time([int]$sec){
   return "{0:00}:{1:00}" -f [int]$ts.TotalMinutes, $ts.Seconds
 }
 
+function Get-TimeOfDayGreeting([datetime]$now){
+  $h = $now.Hour
+
+  [int]$segmentId = 3
+  [string[]]$choices = @(
+    "Good night",
+    "That’s enough for today",
+    "You earned your rest",
+    "We go again tomorrow"
+  )
+
+  if($h -ge 5 -and $h -lt 12){
+    $segmentId = 0
+    $choices = @(
+      "Good morning",
+      "Time to focus",
+      "Let’s get started",
+      "Make today count"
+    )
+  } elseif($h -ge 12 -and $h -lt 17){
+    $segmentId = 1
+    $choices = @(
+      "Good afternoon",
+      "Keep going — you’ve got this",
+      "One more step",
+      "Stay in the flow"
+    )
+  } elseif($h -ge 17 -and $h -lt 22){
+    $segmentId = 2
+    $choices = @(
+      "Good evening",
+      "Finish strong",
+      "You’re on the home stretch",
+      "Almost there"
+    )
+  }
+
+  # Deterministic daily variation (no flicker): pick by day + segment.
+  $seed = [int]$now.Date.DayOfYear + ($segmentId * 37)
+  $idx = [int]($seed % $choices.Count)
+  return $choices[$idx]
+}
+
 function Get-UnreadMailsTop5 {
   try {
     $ol = New-Object -ComObject Outlook.Application
@@ -440,7 +483,7 @@ $xaml = @"
 
           <StackPanel>
             <TextBlock x:Name="TimeText" Text="--:--" FontSize="46" FontWeight="SemiBold" Foreground="#EAF2FF"/>
-            <TextBlock x:Name="GreetText" Text="Good Morning, İrem" FontSize="16" Foreground="#9FB0C6" Margin="2,4,0,0"/>
+            <TextBlock x:Name="GreetText" Text="" FontSize="16" Foreground="#9FB0C6" Margin="2,4,0,0"/>
           </StackPanel>
 
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
@@ -658,7 +701,7 @@ $xaml = @"
                   </Grid.ColumnDefinitions>
                   <StackPanel Orientation="Horizontal">
                     <TextBlock Text="☑" FontSize="14" Foreground="#F2B84B" Margin="0,0,8,0"/>
-                    <TextBlock Text="TODAY'S TASKS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TodoTitleText" Text="TODAY'S TASKS" Foreground="#EAF2FF" FontSize="16" FontWeight="SemiBold"/>
                   </StackPanel>
                   <Button x:Name="TodoAddBtn" Grid.Column="1" Style="{StaticResource IconBtn}" Content="＋" Width="28" Height="28"/>
                 </Grid>
@@ -792,6 +835,7 @@ $win = [Windows.Markup.XamlReader]::Load($reader)
 
 # ------- UI refs -------
 $TimeText = $win.FindName("TimeText")
+$GreetText = $win.FindName("GreetText")
 $CloseBtn = $win.FindName("CloseBtn")
 
 # Calendar refs
@@ -828,6 +872,7 @@ $TodoInputContainer = $win.FindName("TodoInputContainer")
 $TodoInput  = $win.FindName("TodoInput")
 $TodoList   = $win.FindName("TodoList")
 $TodoAddBtn = $win.FindName("TodoAddBtn")
+$TodoTitleText = $win.FindName("TodoTitleText")
 
 # Mail
 $MailList = $win.FindName("MailList")
@@ -897,7 +942,27 @@ function Render-TodoList {
   if(-not $TodoList){ return }
   $TodoList.Children.Clear()
 
-  foreach($t in ($global:Todos | Sort-Object createdAt)){
+  $targetDay = if($global:CalSelected){ $global:CalSelected.Date } else { (Get-Date).Date }
+  $today = (Get-Date).Date
+  $todosToRender = @(
+    $global:Todos |
+      Where-Object {
+        $d = Get-TodoCreatedDateOnly $_
+        $d -ne $null -and $d -eq $targetDay
+      } |
+      Sort-Object { Get-TodoCreatedAtDateTime $_ }
+  )
+
+  if($todosToRender.Count -eq 0){
+    $tb = New-Object System.Windows.Controls.TextBlock
+    $tb.Text = if($targetDay -eq $today){ "No tasks for today" } else { "No tasks for this day" }
+    $tb.Foreground = "#8FA3BC"
+    $tb.Margin = "2,2,0,0"
+    $TodoList.Children.Add($tb) | Out-Null
+    return
+  }
+
+  foreach($t in $todosToRender){
     $row = New-Object System.Windows.Controls.Border
     $row.CornerRadius = "8"
     $row.Background = "#151B22"
@@ -1022,6 +1087,80 @@ function Convert-ToLocalDateOnly([object]$value){
   } catch {
     return $null
   }
+}
+
+function Convert-ToLocalDateTime([object]$value){
+  if($null -eq $value){ return $null }
+
+  if($value -is [datetime]){
+    if($value.Kind -eq [System.DateTimeKind]::Utc){
+      return ($value).ToLocalTime()
+    }
+    return $value
+  }
+
+  $s = [string]$value
+  if($s -match "\\/Date\\((\d+)\\)\\/"){
+    try {
+      $ms = [int64]$matches[1]
+      $dto = [System.DateTimeOffset]::FromUnixTimeMilliseconds($ms)
+      return $dto.ToLocalTime().DateTime
+    } catch {
+      # fall through
+    }
+  }
+
+  try {
+    return [datetime]$value
+  } catch {
+    return $null
+  }
+}
+
+function Get-TodoCreatedAtDateTime($todo){
+  if($null -eq $todo){ return $null }
+  if(-not $todo.PSObject.Properties["createdAt"]){ return $null }
+
+  $ca = $todo.createdAt
+
+  if($ca -is [datetime] -or $ca -is [string]){
+    return (Convert-ToLocalDateTime $ca)
+  }
+
+  # Some JSON serializers store createdAt as an object: { value: "/Date(...)\/", DateTime: "..." }
+  if($ca -ne $null -and $ca.PSObject){
+    if($ca.PSObject.Properties["value"]){
+      $dt = Convert-ToLocalDateTime $ca.value
+      if($dt -ne $null){ return $dt }
+    }
+    if($ca.PSObject.Properties["DateTime"]){
+      $dt = Convert-ToLocalDateTime $ca.DateTime
+      if($dt -ne $null){ return $dt }
+    }
+  }
+
+  return (Convert-ToLocalDateTime ([string]$ca))
+}
+
+function Get-TodoCreatedDateOnly($todo){
+  $dt = Get-TodoCreatedAtDateTime $todo
+  if($dt -eq $null){ return $null }
+  return (Convert-ToLocalDateOnly $dt)
+}
+
+function Update-TodoTitleUI {
+  if(-not $TodoTitleText){ return }
+
+  $selected = if($global:CalSelected){ $global:CalSelected.Date } else { (Get-Date).Date }
+  $today = (Get-Date).Date
+
+  if($selected -eq $today){
+    $TodoTitleText.Text = "TODAY'S TASKS"
+    return
+  }
+
+  $ci = [System.Globalization.CultureInfo]::GetCultureInfo("en-US")
+  $TodoTitleText.Text = ("TASKS — {0}" -f $selected.ToString("ddd, MMM d", $ci))
 }
 
 function Get-NoteDate($note){
@@ -1202,6 +1341,9 @@ $NewNoteBtn.Add_Click({
   Render-Calendar
   Update-NotesListUI
   Set-CurrentNote $note
+
+  Update-TodoTitleUI
+  Render-TodoList
 })
 
 if($NewNoteForSelectedBtn){
@@ -1510,6 +1652,9 @@ function Ensure-CalendarButtons {
           Set-CurrentNote $null
         }
       }
+
+      Update-TodoTitleUI
+      Render-TodoList
     })
     $DaysGrid.Children.Add($btn) | Out-Null
     $global:CalButtons += $btn
@@ -1580,6 +1725,28 @@ if($TodoAddBtn){
     if($TodoInputContainer.Visibility -eq [System.Windows.Visibility]::Visible){
       Add-TodoFromInput
     } else {
+      # Adding a new task is a "today" action: jump calendar selection to today.
+      $today = (Get-Date).Date
+      if($global:CalSelected -ne $today){
+        $saveTimer.Stop()
+        Save-CurrentNote
+
+        $global:CalDisplay = Get-Date -Year $today.Year -Month $today.Month -Day 1
+        $global:CalSelected = $today
+        Render-Calendar
+        Update-NotesListUI
+
+        $dayNotes = Get-NotesForCurrentDay | Sort-Object createdAt -Descending
+        if($dayNotes.Count -gt 0){
+          Set-CurrentNote ($dayNotes | Select-Object -First 1)
+        } else {
+          Set-CurrentNote $null
+        }
+      }
+
+      Update-TodoTitleUI
+      Render-TodoList
+
       $TodoInputContainer.Visibility = [System.Windows.Visibility]::Visible
       if($TodoInput){ $TodoInput.Focus() | Out-Null }
     }
@@ -1647,7 +1814,13 @@ if($QlExcel){    $QlExcel.Add_Click({ Start-ProcessSafe "excel" }) }
 # ------- Timers -------
 $clock = New-Object System.Windows.Threading.DispatcherTimer
 $clock.Interval = [TimeSpan]::FromSeconds(1)
-$clock.add_Tick({ $TimeText.Text = (Get-Date).ToString("hh:mm tt") })
+$clock.add_Tick({
+  $now = Get-Date
+  $TimeText.Text = $now.ToString("hh:mm tt")
+  if($GreetText){
+    $GreetText.Text = ("{0}, İrem" -f (Get-TimeOfDayGreeting $now))
+  }
+})
 $clock.Start()
 
 $pom = New-Object System.Windows.Threading.DispatcherTimer
@@ -1676,11 +1849,19 @@ $mailT.Start()
 
 # initial UI
 $global:Todos = @(Load-TodosData)
+Update-TodoTitleUI
 Render-TodoList
 Reset-Pomodoro
 Update-SystemStatusUI
 Update-MailUI
 Render-Calendar
+
+# initial greeting
+try {
+  $now = Get-Date
+  if($TimeText){ $TimeText.Text = $now.ToString("hh:mm tt") }
+  if($GreetText){ $GreetText.Text = ("{0}, İrem" -f (Get-TimeOfDayGreeting $now)) }
+} catch {}
 
 # start hidden (centered)
 $wa = [System.Windows.SystemParameters]::WorkArea
